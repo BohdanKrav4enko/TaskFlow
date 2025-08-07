@@ -1,10 +1,13 @@
 import { TaskStatus } from "@/common/enums"
-import { useAppDispatch, useAppSelector } from "@/common/hooks"
-import { fetchTasksTC, selectTasks } from "@/features/todolists/model/tasks-slice"
-import type { DomainTodolist } from "@/features/todolists/model/todolists-slice"
-import { useEffect } from "react"
-import { TaskItem } from "./TaskItem/TaskItem"
+import { useGetTasksQuery } from "@/features/todolists/api/tasksApi"
+import type { DomainTodolist } from "@/features/todolists/lib/types"
 import List from "@mui/material/List"
+import { TaskItem } from "./TaskItem/TaskItem"
+import { TasksSkeleton } from "./TasksSkeleton/TasksSkeleton"
+import { useState } from "react"
+import {
+  TasksPagination
+} from "@/features/todolists/ui/Todolists/TodolistItem/Tasks/TasksPagination/TasksPagination.tsx"
 
 type Props = {
   todolist: DomainTodolist
@@ -13,29 +16,33 @@ type Props = {
 export const Tasks = ({ todolist }: Props) => {
   const { id, filter } = todolist
 
-  const tasks = useAppSelector(selectTasks)
+  const [page, setPage] = useState(1)
 
-  const dispatch = useAppDispatch()
+  const { data, isLoading } = useGetTasksQuery({todolistId: id, params: { page },})
 
-  const todolistTasks = tasks[id]
-  let filteredTasks = todolistTasks
+  let filteredTasks = data?.items
   if (filter === "active") {
-    filteredTasks = todolistTasks.filter((task) => task.status === TaskStatus.New)
+    filteredTasks = filteredTasks?.filter((task) => task.status === TaskStatus.New)
   }
   if (filter === "completed") {
-    filteredTasks = todolistTasks.filter((task) => task.status === TaskStatus.Completed)
+    filteredTasks = filteredTasks?.filter((task) => task.status === TaskStatus.Completed)
   }
 
-  useEffect(() => {
-    dispatch(fetchTasksTC(id))
-  }, [])
+  if (isLoading) {
+    return <TasksSkeleton />
+  }
 
   return (
     <>
       {filteredTasks?.length === 0 ? (
         <p>Тасок нет</p>
       ) : (
-        <List>{filteredTasks?.map((task) => <TaskItem key={task.id} task={task} todolistId={id} />)}</List>
+        <>
+          <List>
+            {filteredTasks?.map(task => <TaskItem key={task.id} task={task} todolist={todolist} />)}
+          </List>
+          <TasksPagination totalCount={data?.totalCount || 0} page={page} setPage={setPage} />
+        </>
       )}
     </>
   )
