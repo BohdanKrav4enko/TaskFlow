@@ -1,8 +1,7 @@
-import { selectThemeMode, setIsLoggedInAC } from "@/app/app-slice"
+import { setIsLoggedInAC } from "@/app/app-slice"
 import { AUTH_TOKEN } from "@/common/constants"
 import { ResultCode } from "@/common/enums"
-import { useAppDispatch, useAppSelector } from "@/common/hooks"
-import { getTheme } from "@/common/theme"
+import { useAppDispatch } from "@/common/hooks"
 import { useLoginMutation } from "@/features/auth/api/authApi"
 import { type LoginInputs, loginSchema } from "@/features/auth/lib/schemas"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -18,13 +17,11 @@ import { Controller, type SubmitHandler, useForm } from "react-hook-form"
 import styles from "./Login.module.css"
 
 export const Login = () => {
-  const themeMode = useAppSelector(selectThemeMode)
 
   const [login] = useLoginMutation()
 
   const dispatch = useAppDispatch()
 
-  const theme = getTheme(themeMode)
 
   const {
     register,
@@ -33,7 +30,7 @@ export const Login = () => {
     control,
     formState: { errors },
   } = useForm<LoginInputs>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema as any),
     defaultValues: { email: "", password: "", rememberMe: false },
   })
 
@@ -52,18 +49,6 @@ export const Login = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <FormControl>
           <FormLabel>
-            <p>
-              To login get registered
-              <a
-                style={{ color: theme.palette.primary.main, marginLeft: "5px" }}
-                href="https://social-network.samuraijs.com"
-                target="_blank"
-                rel="noreferrer"
-              >
-                here
-              </a>
-            </p>
-            <p>or use common test account credentials:</p>
             <p>
               <b>Email:</b> free@samuraijs.com
             </p>
